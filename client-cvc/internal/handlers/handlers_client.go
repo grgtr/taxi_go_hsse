@@ -4,10 +4,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"io"
 	"net/http"
 	"taxi/client-cvc/internal/mongodb"
-
-	"github.com/go-chi/chi/v5"
 )
 
 // Router returns a new ServeMux with registered handlers for the client service.
@@ -43,26 +43,80 @@ func getTripsHandler(db *mongodb.Database) http.HandlerFunc {
 	}
 }
 
+type TripRequest struct {
+	OfferID string `json:"offer_id"`
+}
+
+type Order struct {
+	From     Location `json:"from"`
+	To       Location `json:"to"`
+	ClientID string   `json:"client_id"`
+	Price    Price    `json:"price"`
+}
+type Location struct {
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
+}
+
+type Price struct {
+	Amount   float64 `json:"amount"`
+	Currency string  `json:"currency"`
+}
+
 func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var trip mongodb.Trip
-		//fmt.Println(r.Body)
+		//var trip mongodb.Trip
+		var trip TripRequest
+		//user_id := r.Header.Get("user_id")
 		err := json.NewDecoder(r.Body).Decode(&trip)
-		fmt.Println("Decoding JSON request createTripHandler")
-		//fmt.Println(trip)
+		fmt.Println(trip.OfferID)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error decoding JSON request", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		resp, err := http.Get("http://127.0.0.1:8090/offers/" + trip.OfferID)
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, "Error reading response body", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		var order Order
+		err = json.Unmarshal(bytes, &order)
+		fmt.Println(order)
 		if err != nil {
 			http.Error(w, "Error decoding JSON request", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
+		defer resp.Body.Close()
 		// Validate and insert trip into MongoDB
-		err = db.CreateTrip(&trip) // Implement this function in your mongodb package
+		offer := mongodb.Trip{
+			OfferID: trip.OfferID,
+			From: mongodb.LatLngLiteral{
+				Lat: order.From.Lat,
+				Lng: order.From.Lng,
+			},
+			To: mongodb.LatLngLiteral{
+				Lat: order.To.Lat,
+				Lng: order.To.Lng,
+			},
+			Price: mongodb.Money{
+				Amount:   order.Price.Amount,
+				Currency: order.Price.Currency,
+			},
+			Status: "DRIVER_SEARCH",
+		}
+		err = db.CreateTrip(&offer) // Implement this function in your mongodb package
 		if err != nil {
 			http.Error(w, "Error creating trip in MongoDB", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		fmt.Println("Created trip in MongoDB")
+		//fmt.Println("Created trip in MongoDB")
 
 		w.WriteHeader(http.StatusOK)
 	}
