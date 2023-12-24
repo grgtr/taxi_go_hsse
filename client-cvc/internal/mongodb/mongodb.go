@@ -39,11 +39,13 @@ type Money struct {
 // Database represents a MongoDB database connection.
 type Database struct {
 	client *mongo.Client
+	dbName string
 }
 
 // NewDatabase creates a new MongoDB database connection.
 func NewDatabase(uri, dbName string) (*Database, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +62,7 @@ func NewDatabase(uri, dbName string) (*Database, error) {
 
 	return &Database{
 		client: client,
+		dbName: dbName,
 	}, nil
 }
 
@@ -74,7 +77,7 @@ func (db *Database) Close() {
 
 // GetTrips retrieves a list of trips from MongoDB.
 func (db *Database) GetTrips() ([]Trip, error) {
-	collection := db.client.Database("your_database_name").Collection("trips")
+	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -95,7 +98,7 @@ func (db *Database) GetTrips() ([]Trip, error) {
 
 // CreateTrip inserts a new trip into MongoDB.
 func (db *Database) CreateTrip(trip *Trip) error {
-	collection := db.client.Database("your_database_name").Collection("trips")
+	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -111,7 +114,7 @@ func (db *Database) CreateTrip(trip *Trip) error {
 
 // GetTripByID retrieves a trip by ID from MongoDB.
 func (db *Database) GetTripByID(tripID string) (*Trip, error) {
-	collection := db.client.Database("your_database_name").Collection("trips")
+	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -132,7 +135,7 @@ func (db *Database) GetTripByID(tripID string) (*Trip, error) {
 
 // CancelTrip cancels a trip by ID in MongoDB.
 func (db *Database) CancelTrip(tripID string) error {
-	collection := db.client.Database("your_database_name").Collection("trips")
+	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

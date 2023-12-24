@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"taxi/client-cvc/internal/mongodb"
 
@@ -45,7 +46,10 @@ func getTripsHandler(db *mongodb.Database) http.HandlerFunc {
 func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var trip mongodb.Trip
+		//fmt.Println(r.Body)
 		err := json.NewDecoder(r.Body).Decode(&trip)
+		fmt.Println("Decoding JSON request createTripHandler")
+		//fmt.Println(trip)
 		if err != nil {
 			http.Error(w, "Error decoding JSON request", http.StatusBadRequest)
 			return
@@ -57,6 +61,8 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 			http.Error(w, "Error creating trip in MongoDB", http.StatusInternalServerError)
 			return
 		}
+
+		fmt.Println("Created trip in MongoDB")
 
 		w.WriteHeader(http.StatusOK)
 	}
