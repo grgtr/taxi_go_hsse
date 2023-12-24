@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	StoragePath string `yaml:"storage_path" env-required:"true"`
-	ConfigDB    DatabaseConfig
+	//StoragePath string `yaml:"storage_path" env-required:"true"`
+	ConfigDB DatabaseConfig
 }
 
 type DatabaseConfig struct {
