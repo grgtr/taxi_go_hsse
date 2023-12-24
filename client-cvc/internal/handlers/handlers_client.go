@@ -77,7 +77,7 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		resp, err := http.Get("http://127.0.0.1:8090/offers/" + trip.OfferID)
+		resp, err := http.Get("http://127.0.0.1:8099/offers/" + trip.OfferID)
 		bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, "Error reading response body", http.StatusBadRequest)
