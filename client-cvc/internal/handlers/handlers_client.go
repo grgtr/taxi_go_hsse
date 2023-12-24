@@ -25,7 +25,8 @@ func Router(db *mongodb.Database) *chi.Mux {
 
 func getTripsHandler(db *mongodb.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		trips, err := db.GetTrips() // Implement this function in your mongodb package
+		user_id := r.Header.Get("user_id")
+		trips, err := db.GetTrips(user_id) // Implement this function in your mongodb package
 		if err != nil {
 			http.Error(w, "Error getting trips from MongoDB", http.StatusInternalServerError)
 			return
@@ -94,7 +95,8 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 		defer resp.Body.Close()
 		// Validate and insert trip into MongoDB
 		offer := mongodb.Trip{
-			OfferID: trip.OfferID,
+			OfferID:  trip.OfferID,
+			ClientID: r.Header.Get("user_id"),
 			From: mongodb.LatLngLiteral{
 				Lat: order.From.Lat,
 				Lng: order.From.Lng,

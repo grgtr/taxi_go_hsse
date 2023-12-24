@@ -15,12 +15,13 @@ import (
 
 // Trip represents a trip in MongoDB.
 type Trip struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty"`
-	OfferID string             `bson:"offer_id"`
-	From    LatLngLiteral      `bson:"from"`
-	To      LatLngLiteral      `bson:"to"`
-	Price   Money              `bson:"price"`
-	Status  string             `bson:"status"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	OfferID  string             `bson:"offer_id"`
+	ClientID string             `bson:"client_id"`
+	From     LatLngLiteral      `bson:"from"`
+	To       LatLngLiteral      `bson:"to"`
+	Price    Money              `bson:"price"`
+	Status   string             `bson:"status"`
 	// Add other fields as needed
 }
 
@@ -76,13 +77,16 @@ func (db *Database) Close() {
 }
 
 // GetTrips retrieves a list of trips from MongoDB.
-func (db *Database) GetTrips() ([]Trip, error) {
+func (db *Database) GetTrips(user_id string) ([]Trip, error) {
 	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	// Define filter to get trips for a specific client_id
+	filter := bson.M{"client_id": user_id}
+
+	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
