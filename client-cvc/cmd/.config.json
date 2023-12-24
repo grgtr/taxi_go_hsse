@@ -4,6 +4,7 @@
   "version": "v1.0.0",
   "ip+port": "127.0.0.1:8080",
   "database": {
-    "uri": "mongodb://localhost:27017/ваша_база_данных"
+    "uri": "mongodb://localhost:27017/my_db",
+    "name": "my_db"
   }
 }

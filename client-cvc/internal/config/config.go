@@ -8,7 +8,8 @@ import (
 
 // MongoDBConfig represents the MongoDB configuration.
 type MongoDBConfig struct {
-	URI string `json:"uri"`
+	URI  string `json:"uri"`
+	Name string `json:"name"`
 }
 
 // Config represents the overall configuration of the client service.
