@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
-	"log"
 	"os"
+	"sync"
 	"taxi/internal/trip_svc/app/config"
 	"taxi/internal/trip_svc/app/repository"
 	"taxi/internal/trip_svc/app/repository/trip"
@@ -48,24 +48,44 @@ func (app *App) Init(cfg *config.Config, logger *zap.SugaredLogger) {
 }
 
 func (app *App) Start() {
-	for {
-		m, err := app.reader.ReadMessage(context.Background())
-		if err != nil {
-			fmt.Println("There is an error." + err.Error())
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		for {
+			m, err := app.reader.ReadMessage(context.Background())
+			if err != nil {
+				fmt.Println("There is an error." + err.Error())
+			}
+			var msg trip.Event
+			err = kafka.Unmarshal(m.Value, &msg)
 		}
-	}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for {
+			//
+		}
+	}()
+
+	wg.Wait()
 }
 
 func (app *App) Stop(ctx context.Context) error {
 	<-ctx.Done()
 
+	defer app.reader.Close()
+	defer app.writerToClient.Close()
+	defer app.writerToDriver.Close()
+
 	done := make(chan bool)
-	log.Printf("Server is shutting down...")
+	app.logger.Info("Server is shutting down...")
 
 	// остановка приложения, gracefully shutdown
 	go func() {
-
-		log.Printf("Server stopped")
+		app.logger.Info("Server stopped")
 		close(done)
 	}()
 
