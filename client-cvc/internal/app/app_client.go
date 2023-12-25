@@ -3,7 +3,9 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"log"
@@ -12,7 +14,9 @@ import (
 	"os/signal"
 	"taxi/internal/config"
 	"taxi/internal/handlers"
+	"taxi/internal/models"
 	"taxi/internal/mongodb"
+	kfk "taxi/pkg/kafka"
 	"time"
 )
 
@@ -74,6 +78,12 @@ func (app *App) Start() {
 		}
 	}()
 
+	go func() {
+		for {
+			app.listner()
+		}
+	}()
+
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -91,4 +101,87 @@ func (app *App) Start() {
 		log.Fatal("Error shutting down server:", err)
 	}
 	app.Logger.Info("Server has stopped successfully.")
+}
+
+func (app *App) listner() {
+	ctx, span := app.Tracer.Start(context.Background(), "Iteration")
+	defer span.End()
+	connClient, err := kfk.ConnectKafka(ctx, "kafka:9092", "trip-client-topic", 0)
+
+	if err != nil {
+		app.Logger.Fatalf("Kafka connect error. %v", err)
+		return
+	}
+	bytes, err := kfk.ReadFromTopic(connClient)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Kafka read error")
+		app.Logger.Errorf("Kafka read error. %v", err)
+		return
+	}
+	var response models.Request
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Unmarshal error")
+		app.Logger.Errorf("Unmarshal error. %v", err)
+		return
+	}
+	if response.DataContentType != "application/json" {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Data type error")
+		app.Logger.Errorf("Data type error. %v", err)
+		return
+	}
+
+	switch response.Type {
+	case "trip.event.accepted":
+		var eventData models.EventAcceptData
+		err := json.Unmarshal(response.Data, &eventData)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Data unmarshal error")
+			app.Logger.Errorf("Data unmarshal error. %v", err)
+			return
+		}
+		err = app.Database.UpdateTripStatus(eventData.TripId, "DRIVER_FOUND") // Implement this function in your mongodb package
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Get trip error")
+			app.Logger.Errorf("Get trip error. %v", err)
+			return
+		}
+	case "trip.event.started":
+		var eventData models.EventStartData
+		err := json.Unmarshal(response.Data, &eventData)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Data unmarshal error")
+			app.Logger.Errorf("Data unmarshal error. %v", err)
+			return
+		}
+		err = app.Database.UpdateTripStatus(eventData.TripId, "STARTED") // Implement this function in your mongodb package
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Get trip error")
+			app.Logger.Errorf("Get trip error. %v", err)
+			return
+		}
+	case "trip.event.ended":
+		var eventData models.EventEndData
+		err := json.Unmarshal(response.Data, &eventData)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Data unmarshal error")
+			app.Logger.Errorf("Data unmarshal error. %v", err)
+			return
+		}
+		err = app.Database.UpdateTripStatus(eventData.TripId, "ENDED") // Implement this function in your mongodb package
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "Get trip error")
+			app.Logger.Errorf("Get trip error. %v", err)
+			return
+		}
+	}
 }

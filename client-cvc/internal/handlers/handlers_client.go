@@ -145,15 +145,12 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 			Data:            jsonData,
 		}
 		toTrip, err := kfk.ConnectKafka(context.Background(), "kafka:9092", "driver-client-trip-topic", 0)
-		fmt.Println(toTrip)
-		fmt.Println("before send")
 		jsonRequest, err := json.Marshal(request)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		err = kfk.SendToTopic(toTrip, jsonRequest)
-		fmt.Println("after send")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -177,14 +174,14 @@ func getTripByIDHandler(db *mongodb.Database) http.HandlerFunc {
 
 		trip, err := db.GetTripByID(tripID) // Implement this function in your mongodb package
 		if err != nil {
-			http.Error(w, "Error getting trip from MongoDB", http.StatusInternalServerError)
+			http.Error(w, "Incorrect trip ID", http.StatusBadRequest)
 			return
 		}
 
 		// Convert trip to JSON
 		response, err := json.Marshal(trip)
 		if err != nil {
-			http.Error(w, "Error encoding trip to JSON", http.StatusInternalServerError)
+			http.Error(w, "Trip not found", http.StatusNotFound)
 			return
 		}
 
@@ -195,12 +192,44 @@ func getTripByIDHandler(db *mongodb.Database) http.HandlerFunc {
 
 func cancelTripHandler(db *mongodb.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tripID := chi.URLParam(r, "trip_id")
-
-		// Your cancel trip logic using MongoDB
-		err := db.CancelTrip(tripID) // Implement this function in your mongodb package
+		trip_id := chi.URLParam(r, "trip_id")
+		reason := r.URL.Query().Get("reason")
+		//user_id := r.Header.Get("user_id")
+		offerData := models.CommandCancelData{
+			TripId: trip_id,
+			Reason: reason,
+		}
+		jsonData, err := json.Marshal(offerData)
 		if err != nil {
-			http.Error(w, "Error canceling trip in MongoDB", http.StatusInternalServerError)
+			fmt.Println("Error:", err)
+			return
+		}
+		request := models.Request{
+			Id:              trip_id,
+			Source:          "/client",
+			Type:            "trip.command.cancel",
+			DataContentType: "application/jsonapplication/json",
+			Time:            time.Now(),
+			Data:            jsonData,
+		}
+		toTrip, err := kfk.ConnectKafka(context.Background(), "kafka:9092", "driver-client-trip-topic", 0)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		jsonRequest, err := json.Marshal(request)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		err = kfk.SendToTopic(toTrip, jsonRequest)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = db.UpdateTripStatus(trip_id, "CANCELED")
+		if err != nil {
+			http.Error(w, "Error canceling trip in MongoDB", http.StatusBadRequest)
 			return
 		}
 

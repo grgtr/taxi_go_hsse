@@ -146,7 +146,7 @@ func (db *Database) GetTripByID(tripID string) (*Trip, error) {
 }
 
 // CancelTrip cancels a trip by ID in MongoDB.
-func (db *Database) CancelTrip(tripID string) error {
+func (db *Database) DeleteTrip(tripID string) error {
 	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -163,5 +163,36 @@ func (db *Database) CancelTrip(tripID string) error {
 	}
 
 	fmt.Printf("Deleted %v document(s)\n", result.DeletedCount)
+	return nil
+}
+
+// UpdateTripStatus updates the status of a trip by ID in MongoDB.
+func (db *Database) UpdateTripStatus(tripID, newStatus string) error {
+	collection := db.client.Database(db.dbName).Collection("trips")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(tripID)
+	if err != nil {
+		return err
+	}
+
+	// Define filter to find the trip by ID
+	filter := bson.M{"_id": objectID}
+
+	// Define update to set the new status
+	update := bson.M{"$set": bson.M{"status": newStatus}}
+
+	result, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return fmt.Errorf("no trip updated, ID %s not found", tripID)
+	}
+
+	fmt.Printf("Updated status for trip with ID %s to %s\n", tripID, newStatus)
 	return nil
 }
