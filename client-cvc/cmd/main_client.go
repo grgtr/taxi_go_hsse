@@ -14,7 +14,7 @@ import (
 
 func main() {
 	var filePath string
-	flag.StringVar(&filePath, "path", ".config.json", "set config path")
+	flag.StringVar(&filePath, "path", "./cmd/.config.json", "set config path")
 	flag.Parse()
 
 	cfg, err := config.Parse(filePath)

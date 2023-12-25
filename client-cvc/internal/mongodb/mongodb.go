@@ -44,9 +44,16 @@ type Database struct {
 }
 
 // NewDatabase creates a new MongoDB database connection.
-func NewDatabase(uri, dbName string) (*Database, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+func NewDatabase(uri, dbName, username, password string) (*Database, error) {
+	clientOptions := options.Client().ApplyURI(uri)
 
+	// Set credentials
+	clientOptions.Auth = &options.Credential{
+		Username: username,
+		Password: password,
+	}
+
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		return nil, err
 	}

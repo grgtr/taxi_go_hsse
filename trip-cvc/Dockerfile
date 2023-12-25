@@ -2,11 +2,13 @@ FROM golang:1.21-alpine
 
 WORKDIR /app
 
-COPY .. .
+COPY go.mod .
+COPY go.sum .
 
 RUN go mod download
 
-WORKDIR /app/cmd/
-RUN go build -o app
+COPY . .
 
-CMD ["./app"]
+RUN go build -C ./cmd/ -o app
+
+CMD ["./cmd/app"]

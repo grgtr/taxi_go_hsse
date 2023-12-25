@@ -22,7 +22,7 @@ type App struct {
 
 // NewApp initializes and returns a new instance of the client service application.
 func NewApp(cfg *config.Config) *App {
-	db, err := mongodb.NewDatabase(cfg.Database.URI, cfg.Database.Name) // Pass the database name from config
+	db, err := mongodb.NewDatabase(cfg.Database.URI, cfg.Database.Name, "root", "example") // Pass the database name from config
 	if err != nil {
 		log.Fatal("Error initializing database:", err)
 	}

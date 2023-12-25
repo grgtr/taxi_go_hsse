@@ -73,14 +73,21 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 		var trip TripRequest
 		//user_id := r.Header.Get("user_id")
 		err := json.NewDecoder(r.Body).Decode(&trip)
-		fmt.Println(trip.OfferID)
+		fmt.Println(r)
+		fmt.Println(r.Header.Get("user_id"))
+		fmt.Println(r.Body)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Error decoding JSON request", http.StatusBadRequest)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		resp, err := http.Get("http://127.0.0.1:8099/offers/" + trip.OfferID)
+		resp, err := http.Get("http://offering:8099/offers/" + trip.OfferID)
+		if err != nil {
+			http.Error(w, "Error getting offer", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, "Error reading response body", http.StatusBadRequest)

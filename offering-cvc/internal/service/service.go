@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"math"
-	"taxi/offering-cvc/internal/models"
+	"taxi/internal/models"
 	"time"
 )
 

@@ -13,7 +13,7 @@ import (
 	kfk "trip/pkg/kafka"
 )
 
-const configPath = "../config/config.json"
+const configPath = "./config/config.json"
 
 type App struct {
 	ToClientTopic         *kafka.Conn

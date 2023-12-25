@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
-	"taxi/offering-cvc/internal/models"
-	"taxi/offering-cvc/internal/service"
+	"taxi/internal/models"
+	"taxi/internal/service"
 )
 
 type Adapter struct {

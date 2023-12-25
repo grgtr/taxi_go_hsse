@@ -8,11 +8,11 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"os"
-	"taxi/offering-cvc/internal/adapter"
-	"taxi/offering-cvc/internal/models"
+	"taxi/internal/adapter"
+	"taxi/internal/models"
 )
 
-const configPath = "offering-cvc/config/config.json"
+const configPath = "./config/config.json"
 
 // App приложение, управляющее главной логикой
 type App struct {

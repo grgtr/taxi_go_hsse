@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"log"
-	"taxi/offering-cvc/internal/app"
+	"taxi/internal/app"
 )
 
 func main() {
