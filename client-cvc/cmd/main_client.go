@@ -8,13 +8,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"taxi/client-cvc/internal/app"
-	"taxi/client-cvc/internal/config"
+	"taxi/internal/app"
+	"taxi/internal/config"
 )
 
 func main() {
 	var filePath string
-	flag.StringVar(&filePath, "path", "client-cvc/cmd/.config.json", "set config path")
+	flag.StringVar(&filePath, "path", ".config.json", "set config path")
 	flag.Parse()
 
 	cfg, err := config.Parse(filePath)
@@ -22,7 +22,7 @@ func main() {
 		fmt.Println(err)
 		log.Fatal()
 	}
-
+	fmt.Println(cfg)
 	clientApp := app.NewApp(cfg)
 
 	// Run the client service in a goroutine

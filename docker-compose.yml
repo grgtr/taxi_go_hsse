@@ -31,11 +31,20 @@ services:
   trip:
     build:
       context: trip-cvc
-      dockerfile: ../Dockerfile
+      dockerfile: ./Dockerfile
     networks:
       - kafka-network
     depends_on:
       - kafka
-
+  client:
+    ports:
+      - "8060:8060"
+    build:
+      context: client-cvc
+      dockerfile: ./Dockerfile
+    networks:
+      - kafka-network
+    depends_on:
+      - kafka
 networks:
   kafka-network:

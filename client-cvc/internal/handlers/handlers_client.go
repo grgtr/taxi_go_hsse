@@ -2,12 +2,15 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"net/http"
-	"taxi/client-cvc/internal/mongodb"
+	"taxi/internal/mongodb"
+	kfk "taxi/pkg/kafka"
 )
 
 // Router returns a new ServeMux with registered handlers for the client service.
@@ -111,7 +114,18 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 			},
 			Status: "DRIVER_SEARCH",
 		}
-		err = db.CreateTrip(&offer) // Implement this function in your mongodb package
+		//result.InsertedID.(primitive.ObjectID).Hex()
+		result, err := db.CreateTrip(&offer) // Implement this function in your mongodb package
+		toTrip, err := kfk.ConnectKafka(context.Background(), "kafka:9092", "driver-client-trip-topic", 0)
+		fmt.Println(toTrip)
+		fmt.Println("before send")
+		err = kfk.SendToTopic(toTrip, []byte("hellofromclient"))
+		fmt.Println("after send")
+		if err != nil {
+			fmt.Println(err)
+		}
+		result.InsertedID.(primitive.ObjectID).Hex()
+
 		if err != nil {
 			http.Error(w, "Error creating trip in MongoDB", http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)

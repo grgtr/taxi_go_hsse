@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"taxi/client-cvc/internal/config"
-	"taxi/client-cvc/internal/handlers"
-	"taxi/client-cvc/internal/mongodb"
+	"taxi/internal/config"
+	"taxi/internal/handlers"
+	"taxi/internal/mongodb"
 	"time"
 )
 

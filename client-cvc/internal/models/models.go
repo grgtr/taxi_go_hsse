@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-type Config struct {
-	KafkaAddress string `json:"kafkaAddress"`
-}
-
-
 type Request struct {
 	Id              string          `json:"id"`
 	Source          string          `json:"source"`

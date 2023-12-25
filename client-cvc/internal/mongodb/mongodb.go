@@ -88,6 +88,7 @@ func (db *Database) GetTrips(user_id string) ([]Trip, error) {
 
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -101,7 +102,7 @@ func (db *Database) GetTrips(user_id string) ([]Trip, error) {
 }
 
 // CreateTrip inserts a new trip into MongoDB.
-func (db *Database) CreateTrip(trip *Trip) error {
+func (db *Database) CreateTrip(trip *Trip) (*mongo.InsertOneResult, error) {
 	collection := db.client.Database(db.dbName).Collection("trips")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -109,11 +110,11 @@ func (db *Database) CreateTrip(trip *Trip) error {
 
 	result, err := collection.InsertOne(ctx, trip)
 	if err != nil {
-		return err
+		return &mongo.InsertOneResult{}, err
 	}
 
 	fmt.Printf("Inserted new trip with ID %v\n", result.InsertedID)
-	return nil
+	return result, nil
 }
 
 // GetTripByID retrieves a trip by ID from MongoDB.

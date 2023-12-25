@@ -13,7 +13,7 @@ import (
 	kfk "trip/pkg/kafka"
 )
 
-const configPath = "./config/config.json"
+const configPath = "../config/config.json"
 
 type App struct {
 	ToClientTopic         *kafka.Conn
@@ -39,18 +39,25 @@ func NewApp(ctx context.Context) *App {
 	sugLog.Info("Tracer created")
 
 	// Инициализация конфига
+	sugLog.Info("Initializing config")
+	config, err := initConfig()
+	if err != nil {
+		sugLog.Fatalf("Config init error. %v", err)
+		return nil
+	}
+
 	// Подключение к Kafka
-	connClient, err := kfk.ConnectKafka(ctx, "kafka:9092", "trip-client-topic", 0)
+	connClient, err := kfk.ConnectKafka(ctx, config.KafkaAddress, "trip-client-topic", 0)
 	if err != nil {
 		sugLog.Fatalf("Kafka connect error. %v", err)
 		return nil
 	}
-	connDriver, err := kfk.ConnectKafka(ctx, "kafka:9092", "trip-driver-topic", 0)
+	connDriver, err := kfk.ConnectKafka(ctx, config.KafkaAddress, "trip-driver-topic", 0)
 	if err != nil {
 		sugLog.Fatalf("Kafka connect error. %v", err)
 		return nil
 	}
-	connClDrv, err := kfk.ConnectKafka(ctx, "kafka:9092", "driver-client-trip-topic", 0)
+	connClDrv, err := kfk.ConnectKafka(ctx, config.KafkaAddress, "driver-client-trip-topic", 0)
 	if err != nil {
 		sugLog.Fatalf("Kafka connect error. %v", err)
 		return nil

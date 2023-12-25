@@ -1,10 +1,10 @@
 {
   "ip": "127.0.0.1",
-  "port": "8008",
+  "port": "8060",
   "version": "v1.0.0",
-  "ip+port": "127.0.0.1:8008",
+  "ip+port": ":8060",
   "database": {
-    "uri": "mongodb://127.0.0.1:27017/my_db",
+    "uri": "mongodb://mongo:27017/my_db",
     "name": "my_db"
   }
 }
