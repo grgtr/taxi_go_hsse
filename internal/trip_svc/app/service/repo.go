@@ -1,5 +1,10 @@
 package service
 
+import (
+	"taxi/pkg/models"
+)
+
 type TripRepository interface { //TODO
-	//Get(ctx context.Context, id int)
+	Get(id int) (models.Trip, error)
+	Add(trip models.Trip) error
 }

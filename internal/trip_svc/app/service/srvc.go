@@ -1,7 +1,8 @@
 package service
 
 import (
-	"context"
+	"net/http"
+	"taxi/internal/trip_svc/app/repository/trip"
 	"taxi/pkg/models"
 )
 
@@ -15,6 +16,11 @@ func NewService(tripRepo TripRepository) *Service {
 	}
 }
 
-func (s *Service) Get(ctx context.Context, id int) (*models.Trip, error) {
-	return nil, nil //TODO
+func (s *Service) Get(id int) (*models.Trip, error) {
+	return s.tripRepo.Get(id)
+}
+
+func (s *Service) CreateTrip(event trip.Event) error {
+	resp, err := http.Get("http://localhost:8089/offers/")
+	return s.tripRepo.Add(trip)
 }
