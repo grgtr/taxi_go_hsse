@@ -48,9 +48,11 @@ func (app *App) Init(cfg *config.Config, logger *zap.SugaredLogger) {
 }
 
 func (app *App) Start() {
-	m, err := app.reader.ReadMessage(context.Background())
-	if err != nil {
-		fmt.Println("There is an error." + err.Error())
+	for {
+		m, err := app.reader.ReadMessage(context.Background())
+		if err != nil {
+			fmt.Println("There is an error." + err.Error())
+		}
 	}
 }
 
