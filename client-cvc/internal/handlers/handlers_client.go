@@ -9,8 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"net/http"
+	"taxi/internal/models"
 	"taxi/internal/mongodb"
 	kfk "taxi/pkg/kafka"
+	"time"
 )
 
 // Router returns a new ServeMux with registered handlers for the client service.
@@ -123,10 +125,34 @@ func createTripHandler(db *mongodb.Database) http.HandlerFunc {
 		}
 		//result.InsertedID.(primitive.ObjectID).Hex()
 		result, err := db.CreateTrip(&offer) // Implement this function in your mongodb package
+		//"data": {
+		//	"offer_id": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN0cmluZyIsImZyb20iOnsibGF0IjowLCJsbmciOjB9LCJ0byI6eyJsYXQiOjAsImxuZyI6MH0sImNsaWVudF9pZCI6InN0cmluZyIsInByaWNlIjp7ImFtb3VudCI6OTkuOTUsImN1cnJlbmN5IjoiUlVCIn19.fg0Bv2ONjT4r8OgFqJ2tpv67ar7pUih2LhDRCRhWW3c"
+		//}
+		offerData := models.CommandCreateData{
+			OfferId: trip.OfferID,
+		}
+		jsonData, err := json.Marshal(offerData)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		request := models.Request{
+			Id:              result.InsertedID.(primitive.ObjectID).Hex(),
+			Source:          "/client",
+			Type:            "trip.command.create",
+			DataContentType: "application/jsonapplication/json",
+			Time:            time.Now(),
+			Data:            jsonData,
+		}
 		toTrip, err := kfk.ConnectKafka(context.Background(), "kafka:9092", "driver-client-trip-topic", 0)
 		fmt.Println(toTrip)
 		fmt.Println("before send")
-		err = kfk.SendToTopic(toTrip, []byte("hellofromclient"))
+		jsonRequest, err := json.Marshal(request)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		err = kfk.SendToTopic(toTrip, jsonRequest)
 		fmt.Println("after send")
 		if err != nil {
 			fmt.Println(err)

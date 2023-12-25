@@ -6,9 +6,9 @@ import (
 )
 
 type Config struct {
-	KafkaAddress string `json:"kafkaAddress"`
+	KafkaAddress    string `json:"kafkaAddress"`
+	OfferingAddress string `json:"offeringAddress"`
 }
-
 
 type Request struct {
 	Id              string          `json:"id"`
@@ -74,4 +74,11 @@ type EventEndData struct {
 
 type EventStartData struct {
 	TripId string `json:"trip_id"`
+}
+
+type Order struct {
+	From     Location `json:"from"`
+	To       Location `json:"to"`
+	ClientID string   `json:"client_id"`
+	Price    Price    `json:"price"`
 }
